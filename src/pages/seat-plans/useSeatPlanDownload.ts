@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { downloadSeatPlanFile } from './seat-plans.api'
+import { fetchSeatPlanZip } from '@/services'
 import { SeatPlanRecord } from '@/types/seatPlan.type'
+import { DownloadFile } from '@/utils'
 
 export const useSeatPlanDownload = () => {
   const [downloadingId, setDownloadingId] = useState<string | number | null>(null)
@@ -9,7 +10,9 @@ export const useSeatPlanDownload = () => {
   const download = async (record: SeatPlanRecord) => {
     setDownloadingId(record.id)
     try {
-      await downloadSeatPlanFile(record)
+      const blob = await fetchSeatPlanZip(record)
+      DownloadFile(blob, record.name , record.createAt)
+      
       toast.success('Download success')
     } catch (err) {
       console.error(err)

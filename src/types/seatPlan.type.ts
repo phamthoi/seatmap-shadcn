@@ -1,6 +1,5 @@
 export interface SeatPlanRecord {
   id: string | number
-  originalFilename?: string
   name?: string
   createAt?: string
 }

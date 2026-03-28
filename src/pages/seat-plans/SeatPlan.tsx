@@ -1,5 +1,6 @@
 import { DataTable, List } from '@/components/admin'
 import { SeatPlanDownloadButton } from './SeatPlanDownloadButton'
+import { SeatPlanEditButton } from './SeatPlanEditButton'
 
 export const SeatPlanList = () => (
   <List
@@ -32,7 +33,12 @@ export const SeatPlanList = () => (
       <DataTable.Col
         source="id"
         label="Action"
-        render={(record) => <SeatPlanDownloadButton record={record} />}
+        render={(record) => (
+          <div className="flex items-center gap-2">
+            <SeatPlanEditButton record={record} />
+            <SeatPlanDownloadButton record={record} />
+          </div>
+        )}
       />
     </DataTable>
   </List>
