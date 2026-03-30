@@ -2,11 +2,11 @@ import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
 import { fetchHistories } from '@/services'
-import { PropsHistory } from '@/types'
+import { HistoryProps } from '@/types'
 import { DownloadFile } from '@/utils'
 import { toast } from 'sonner'
 
-export const HistoriesDownloadButton = ({ record }: PropsHistory) => {
+export const HistoriesDownloadButton = ({ record }: HistoryProps) => {
     const [ isLoading, setIsLoading ] = useState(false)
 
     const handleDownload = async () => {
@@ -17,6 +17,8 @@ export const HistoriesDownloadButton = ({ record }: PropsHistory) => {
             toast.success('Download successful')
         } catch (error) {
             toast.error('Download failed, no file to downloaded')
+        } finally {
+            setIsLoading(false)
         }
     }
     return (

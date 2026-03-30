@@ -4,6 +4,6 @@ export interface SeatPlanRecord {
   createAt?: string
 }
 
-export interface Props {
+export interface SeatPlanProps {
     record: SeatPlanRecord
 }

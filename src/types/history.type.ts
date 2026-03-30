@@ -4,6 +4,6 @@ export interface HistoryRecord {
     createAt: string
 }
 
-export interface PropsHistory {
+export interface HistoryProps {
     record: HistoryRecord
 }

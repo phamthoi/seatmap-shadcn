@@ -26,14 +26,19 @@ export function buildUpdatedZip(
 
         const imageFileName = item.imageFileName ?? cat.product.image
 
+        const updatedImage = newImageBlobs[imageFileName]
+          ? imageFileName
+          : item.imageDeleted
+            ? ''
+            : cat.product.image
+
         return {
           ...cat,
           product: {
             ...cat.product,
             name: item.name,
             price: item.price,
-            image: newImageBlobs[item.id] ? imageFileName : cat.product.image,
-            
+            image: updatedImage,
           },
         }
       }),
@@ -72,15 +77,13 @@ export function buildUpdatedZip(
 
   const updatedImages = { ...original.images }
 
-  for (const [itemId, blob] of Object.entries(newImageBlobs)) {
-    const imageFileName = `${itemId}.png`
+  for (const [imageFileName, blob] of Object.entries(newImageBlobs)) {
     updatedImages[imageFileName] = blob
   }
 
   for (const item of items) {
-    if (!item.image) {
-      const imageFileName = `${item.id}.png`
-      delete updatedImages[imageFileName]
+    if (item.imageDeleted && item.imageFileName) {
+      delete updatedImages[item.imageFileName]
     }
   }
 

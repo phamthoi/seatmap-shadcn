@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Table, TableBody, TableCell,
@@ -40,6 +40,18 @@ export function SeatConfigPage() {
     normalizeItems(getDataSeatConfig(indexJson, seats, images))
   )
 
+  // Cleanup tất cả blob URL khi unmount để tránh memory leak
+  useEffect(() => {
+    return () => {
+      items.forEach((item) => {
+        if (item.image?.startsWith('blob:')) {
+          URL.revokeObjectURL(item.image)
+        }
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [newImageBlobs, setNewImageBlobs] = useState<Record<string, Blob>>({})
 
   const updateItem = (id: string, patch: Partial<SeatItemConfig>) =>
@@ -50,16 +62,30 @@ export function SeatConfigPage() {
   const handleFileChange = (id: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      updateItem(id, { image: URL.createObjectURL(file) })
-      // setNewImageBlobs((prev) => ({ ...prev, [id]: file }))
-      setNewImageBlobs((prev) =>({ ...prev, [file.name]: file}))
+      const imageKey = `${id}.png`
+      const prevItem = items.find((i) => i.id === id)
+
+      if (prevItem?.image?.startsWith('blob:')) {
+        URL.revokeObjectURL(prevItem.image)
+      }
+
+      updateItem(id, {
+        image: URL.createObjectURL(file),
+        imageFileName: imageKey,
+      })
+      setNewImageBlobs((prev) => ({ ...prev, [imageKey]: file }))
     }
     e.target.value = ''
   }
 
   const handleDeleteImage = (id: string) => {
     const item = items.find((i) => i.id === id)
-    updateItem(id, { image: '', imageFileName: '' })
+
+    if (item?.image?.startsWith('blob:')) {
+      URL.revokeObjectURL(item.image)
+    }
+
+    updateItem(id, { image: '', imageDeleted: true })
     setNewImageBlobs((prev) => {
       const next = { ...prev }
       if (item?.imageFileName) delete next[item.imageFileName]
@@ -190,7 +216,7 @@ export function SeatConfigPage() {
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-10 h-10 rounded object-cover border border-border"
+                        className="w-15 h-15 rounded object-cover border border-border"
                       />
                       <Button
                         size="icon"
@@ -202,7 +228,7 @@ export function SeatConfigPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded border border-dashed border-border flex items-center justify-center text-muted-foreground">
+                    <div className="w-15 h-15 rounded border border-dashed border-border flex items-center justify-center text-muted-foreground">
                       <ImagePlus className="w-4 h-4" />
                     </div>
                   )}

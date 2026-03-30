@@ -2,11 +2,11 @@ import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
 import { fetchSeatPlanZip } from '@/services'
-import { Props } from '@/types/seatPlan.type'
+import { SeatPlanProps } from '@/types/seatPlan.type'
 import { DownloadFile } from '@/utils'
 import { toast } from 'sonner'
 
-export const SeatPlanDownloadButton = ({ record }: Props) => {
+export const SeatPlanDownloadButton = ({ record }: SeatPlanProps) => {
   const [ isLoading, setIsLoading ] = useState(false)
 
   const handleDownload = async () => {

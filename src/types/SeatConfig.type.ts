@@ -5,5 +5,6 @@ export interface SeatItemConfig {
   price: number
   quota: number
   image?: string
-  imageFileName?: string 
+  imageFileName?: string
+  imageDeleted?: boolean 
 }

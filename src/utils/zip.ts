@@ -1,40 +1,35 @@
 import JSZip from 'jszip'
-import { toast } from 'sonner'
 import { ZipStructure, JsonIndex, SeatData } from '@/types'
 
 export const unzip = async (blob: Blob): Promise<ZipStructure> => {
-    if(!blob) toast.error('Blob data is empty');
+  if (!blob) throw new Error('Blob data is empty')
 
-    const zip = await JSZip.loadAsync(blob);
-    const result: ZipStructure = {
-        index: {} as JsonIndex,
-        seats: {},
-        images: {},
+  const zip = await JSZip.loadAsync(blob)
+  const result: ZipStructure = {
+    index: {} as JsonIndex,
+    seats: {},
+    images: {},
+  }
+
+  const fileEntries = Object.entries(zip.files)
+
+  for (const [fileName, file] of fileEntries) {
+    if (file.dir) continue
+
+    if (fileName.toLowerCase() === 'index.json') {
+      const content = await file.async('string')
+      result.index = JSON.parse(content)
+    } else if (fileName.endsWith('.json')) {
+      const content = await file.async('string')
+      const parsedSeat = JSON.parse(content) as SeatData
+      result.seats[fileName] = parsedSeat
+    } else if (/\.(png|jpg|jpeg|gif|svg)$/i.test(fileName)) {
+      const imgBlob = await file.async('blob')
+      result.images[fileName] = imgBlob
     }
+  }
 
-    const fileEntries = Object.entries(zip.files)
-
-    for (const [fileName, file] of fileEntries) {
-        if (file.dir) continue;
-        
-        if (fileName.toLowerCase() === 'index.json') {
-            const content = await file.async('string');
-            result.index = JSON.parse(content)
-        }
-        
-        else if (fileName.endsWith('.json')) {
-            const content = await file.async('string');
-            const parsedSeat = JSON.parse(content) as SeatData;
-            result.seats[fileName] = parsedSeat;
-        } 
-            
-        else if (/\.(png|jpg|jpeg|gif|svg)$/i.test(fileName)) {
-            const imgBlob = await file.async('blob');
-            result.images[fileName] = imgBlob;
-        }
-    }
-    
-    return result
+  return result
 }
 
 export const zip = async (contents: ZipStructure): Promise<Blob> => {

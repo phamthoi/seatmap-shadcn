@@ -1,1 +1,1 @@
-export * from './HistoriesPage'
+export * from './HistoryList'
