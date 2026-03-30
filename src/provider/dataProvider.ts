@@ -86,12 +86,31 @@ export const dataProvider: DataProvider = {
         }));
     },
 
-    update: (resource, params) =>
-        httpClient(`${apiUrl}/${resource}/${params.id}`, {
+    update: (resource, params) => {
+        const isFormData = params.data instanceof FormData;
+        const token = localStorage.getItem('token');
+
+        if (isFormData) {
+            return fetch(`${apiUrl}/${resource}/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: params.data,
+            })
+                .then((res) => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then((json) => ({ data: json }));
+        }
+
+        return httpClient(`${apiUrl}/${resource}/${params.id}`, {
             method: 'PUT',
             body: JSON.stringify(params.data),
-        }).then(({ json }) => ({ data: json })),
-
+        }).then(({ json }) => ({ data: json }));
+    },
+    
     updateMany: (resource, params) => {
         const query = {
             filter: JSON.stringify({ id: params.ids }),

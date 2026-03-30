@@ -1,11 +1,9 @@
-export interface CategoryRow {
+export interface SeatItemConfig {
   id: string
   name: string
+  color: string
   price: number
   quota: number
-  gate: string
-  floor: number
-  color: string
-  imageDataUrl: string
-  imageFilename: string
+  image?: string
+  imageFileName?: string 
 }

@@ -14,7 +14,7 @@ export interface JsonIndex {
 
 export interface LayoutItem {
     id: string 
-    ame: string 
+    name: string 
     file: string
     points: number[]
     style: { color: string }
