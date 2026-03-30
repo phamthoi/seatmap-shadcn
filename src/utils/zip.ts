@@ -9,7 +9,7 @@ export const unzip = async (blob: Blob): Promise<ZipStructure> => {
     const result: ZipStructure = {
         index: {} as JsonIndex,
         seats: {},
-        images: {}
+        images: {},
     }
 
     const fileEntries = Object.entries(zip.files)
