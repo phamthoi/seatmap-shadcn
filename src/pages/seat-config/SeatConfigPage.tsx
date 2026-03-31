@@ -1,18 +1,69 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  Table, TableBody, TableCell,
-  TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { ImagePlus, Save, ArrowLeft, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getDataSeatConfig, buildUpdatedZip, zip } from '@/utils'
 import { uploadSeatPlanZip } from '@/services'
-import { JsonIndex, SeatItemConfig, SeatData, ZipStructure } from '@/types'
-import { SeatPlanRecord } from '@/types/seatPlan.type'
+import { JsonIndex, SeatItemConfig, SeatData, ZipStructure, ColumnDef, SeatPlanRecord } from '@/types'
+import { ColorCell, ImageCell, DataTable, Header } from '@/components/table'
+
+const buildColumns = (
+  onUpdate: (id: string, patch: Partial<SeatItemConfig>) => void,
+  onFileChange: (id: string) => (e: React.ChangeEvent<HTMLInputElement>) => void,
+  onDeleteImage: (id: string) => void,
+): ColumnDef<SeatItemConfig>[] => [
+  {
+    key: 'color',
+    label: 'Color',
+    className: 'w-',
+    render: (item) => (
+      <ColorCell
+        value={item.color}
+        onChange={(color) => onUpdate(item.id, { color })}
+      />
+    ),
+  },
+  {
+    key: 'name',
+    label: 'Name',
+    render: (item) => (
+      <Input
+        value={item.name}
+        onChange={(e) => onUpdate(item.id, { name: e.target.value })}
+      />
+    ),
+  },
+  {
+    key: 'price',
+    label: 'Price (VNĐ)',
+    render: (item) => (
+      <Input
+        type="number"
+        value={item.price}
+        onChange={(e) => onUpdate(item.id, { price: Number(e.target.value) })}
+      />
+    ),
+  },
+  {
+    key: 'quota',
+    label: 'Quota',
+    render: (item) => <Input type="number" value={item.quota} disabled />,
+  },
+  {
+    key: 'image',
+    label: 'Image',
+    render: (item) => (
+      <ImageCell
+        id={item.id}
+        src={item.image}
+        alt={item.name}
+        onFileChange={onFileChange(item.id)}
+        onDelete={() => onDeleteImage(item.id)}
+      />
+    ),
+  },
+]
 
 function blobToUrl(image: unknown): string {
   if (image instanceof Blob) return URL.createObjectURL(image)
@@ -39,18 +90,6 @@ export function SeatConfigPage() {
   const [items, setItems] = useState<SeatItemConfig[]>(() =>
     normalizeItems(getDataSeatConfig(indexJson, seats, images))
   )
-
-  // Cleanup tất cả blob URL khi unmount để tránh memory leak
-  useEffect(() => {
-    return () => {
-      items.forEach((item) => {
-        if (item.image?.startsWith('blob:')) {
-          URL.revokeObjectURL(item.image)
-        }
-      })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const [newImageBlobs, setNewImageBlobs] = useState<Record<string, Blob>>({})
 
@@ -122,128 +161,23 @@ export function SeatConfigPage() {
     }
   }
 
+  const columns = buildColumns(updateItem, handleFileChange, handleDeleteImage)
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-
-          <Input
-            placeholder="Seat Plan Name"
-            value={headerName}
-            onChange={(e) => setHeaderName(e.target.value)}
-            className="w-[300px]"
-          />
-        </div>
-
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4 mr-2" />
-          )}
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-      </div>
-
+      <Header
+        title={headerName}
+        isSaving={isSaving}
+        placeholder="Seat Plan Name"
+        onTitleChange={setHeaderName}
+        onBack={() => navigate(-1)}
+        onSave={handleSave}
+      />
       <Separator />
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">Color</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Price (VNĐ)</TableHead>
-            <TableHead>Quota</TableHead>
-            <TableHead>Image</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>
-                <div className="relative w-8 h-8">
-                  <input
-                    type="color"
-                    value={item.color}
-                    onChange={(e) => updateItem(item.id, { color: e.target.value })}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div
-                    className="w-8 h-8 rounded border border-border pointer-events-none"
-                    style={{ backgroundColor: item.color }}
-                  />
-                </div>
-              </TableCell>
-
-              <TableCell>
-                <Input
-                  value={item.name}
-                  onChange={(e) => updateItem(item.id, { name: e.target.value })}
-                />
-              </TableCell>
-
-              <TableCell>
-                <Input
-                  type="number"
-                  value={item.price}
-                  onChange={(e) => updateItem(item.id, { price: Number(e.target.value) })}
-                />
-              </TableCell>
-
-              <TableCell>
-                <Input
-                  type="number"
-                  value={item.quota}
-                  disabled
-                />
-              </TableCell>
-
-              <TableCell>
-                <input
-                  id={`file-upload-${item.id}`}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange(item.id)}
-                />
-                <div className="flex items-center gap-2">
-                  {item.image ? (
-                    <div className="relative group">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-15 h-15 rounded object-cover border border-border"
-                      />
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDeleteImage(item.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="w-15 h-15 rounded border border-dashed border-border flex items-center justify-center text-muted-foreground">
-                      <ImagePlus className="w-4 h-4" />
-                    </div>
-                  )}
-                  <label 
-                    htmlFor={`file-upload-${item.id}`}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 w-9 cursor-pointer"
-                  >
-                    <ImagePlus className="w-4 h-4" />
-                  </label>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        columns={columns}
+        data={items}
+        rowKey={(item) => item.id}
+      />
     </div>
   )
 }

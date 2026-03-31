@@ -5,7 +5,7 @@ import { dataProvider, authProvider } from "./provider"
 import { HistoryList } from "@/pages/histories"
 import { SeatPlanList } from "@/pages/seat-plans"
 import { BrowserRouter, Route } from "react-router-dom"
-import { SeatConfigPage } from "@/pages/seat-config/SeatConfigPage"
+import { SeatConfigPage } from "@/pages/seat-config"
 
 const App = () => (
   <BrowserRouter>
