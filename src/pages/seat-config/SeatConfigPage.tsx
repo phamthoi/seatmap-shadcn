@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { getDataSeatConfig, buildUpdatedZip, zip } from '@/utils'
+import { getDataSeatConfig, buildUpdatedZip, zip, blobToUrl } from '@/utils'
 import { uploadSeatPlanZip } from '@/services'
 import { JsonIndex, SeatItemConfig, SeatData, ZipStructure, ColumnDef, SeatPlanRecord } from '@/types'
 import { ColorCell, ImageCell, DataTable, Header } from '@/components/table'
@@ -65,12 +65,6 @@ const buildColumns = (
   },
 ]
 
-function blobToUrl(image: unknown): string {
-  if (image instanceof Blob) return URL.createObjectURL(image)
-  if (typeof image === 'string') return image
-  return ''
-}
-
 function normalizeItems(raw: SeatItemConfig[]): SeatItemConfig[] {
   return raw.map((item) => ({ ...item, image: blobToUrl(item.image) }))
 }
@@ -90,7 +84,7 @@ export function SeatConfigPage() {
   const [items, setItems] = useState<SeatItemConfig[]>(() =>
     normalizeItems(getDataSeatConfig(indexJson, seats, images))
   )
-
+  console.log("item", items)
   const [newImageBlobs, setNewImageBlobs] = useState<Record<string, Blob>>({})
 
   const updateItem = (id: string, patch: Partial<SeatItemConfig>) =>

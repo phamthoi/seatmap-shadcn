@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Pencil, Download } from 'lucide-react'
+import { Pencil, Download, View } from 'lucide-react'
 import { toast } from 'sonner'
 import { unzip } from '@/utils/zip'
 import { fetchSeatPlanZip } from '@/services'
@@ -38,6 +38,20 @@ export const SeatPlanList = () => {
       toast.error('Download failed, no file to downloaded')
     } finally {
       setDownloadLoadingId(null)
+    }
+  }
+
+  const handlePreview = async (record: any) => {
+    setLoadingId(record.id)
+    try {
+      const blob = await fetchSeatPlanZip(record)
+      const contents = await unzip(blob) 
+      navigate('/preview', { state: { contents}})
+    } catch (err) {
+      console.error(err)
+      toast.error("Can not download file")
+    } finally {
+      setLoadingId(null)
     }
   }
 
@@ -88,6 +102,15 @@ export const SeatPlanList = () => {
               title="Download Seat Plan"
               icon={Download}
               loading={downloadLoadingId === record.id}
+            />
+            <SMButton 
+              variant="outline"
+              size="sm"
+              onClick={() => handlePreview(record)}
+              disabled={loadingId === record.id}
+              title="Preview Seat Plan"
+              icon={View}
+              loading={loadingId === record.id}
             />
           </>
         )}

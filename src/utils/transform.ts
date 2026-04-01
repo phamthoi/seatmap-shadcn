@@ -12,6 +12,21 @@ export const transformTime = (date: string) => {
   return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
 }
 
-export const formatPrice = (price: number) => {
-    return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+export function formatVnd(amount: number): string {
+  return new Intl.NumberFormat('vi-VN').format(amount) + ' VND'
+}
+
+export function toSvgPoints(flat: number[]): string {
+  return flat
+    .reduce<string[]>((acc, val, i, arr) => {
+      if (i % 2 === 0) acc.push(`${val},${arr[i + 1]}`)
+      return acc
+    }, [])
+    .join(' ')
+}
+
+export function blobToUrl(image: unknown): string {
+  if (image instanceof Blob) return URL.createObjectURL(image)
+  if (typeof image === 'string') return image
+  return ''
 }

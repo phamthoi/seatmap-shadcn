@@ -4,4 +4,5 @@ import { SeatData } from './jsonSeatStructure.type'
 export interface ZipStructure {
     index: JsonIndex
     seats: Record<string, SeatData>
-    images: Record<string, Blob>}
+    images: Record<string, Blob>
+}
